@@ -14,19 +14,20 @@ using namespace std;
 #define ID_CHECK 1001
 #define ID_REGEN 1002
  
-class MyApp : public wxApp
-{
+class MyApp : public wxApp {
 public:
     virtual bool OnInit();
 };
  
-class MyFrame : public wxFrame
-{
+class MyFrame : public wxFrame {
 public:
     MyFrame();
 
     wxGridSizer *m_gridSizer;
     std::vector<std::vector<wxStaticText*>> m_gridCells;
+
+    vector<vector<int>> nonogram = generateNonogram();
+    vector<string> hints = formatNonogramInterface(nonogram);
  
 private:
     void OnButtonClick(wxCommandEvent& event);
@@ -35,23 +36,19 @@ private:
 
     void CreateGrid(int rows, int cols);
 
-
     void OnExit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
 };
  
 wxIMPLEMENT_APP(MyApp);
  
-bool MyApp::OnInit()
-{
+bool MyApp::OnInit() {
     MyFrame *frame = new MyFrame();
     frame->Show(true);
     return true;
 }
  
-MyFrame::MyFrame()
-    : wxFrame(NULL, wxID_ANY, "Nonogram", wxPoint(30, 30), wxSize(800, 600))
-{
+MyFrame::MyFrame() : wxFrame(NULL, wxID_ANY, "Nonogram", wxPoint(30, 30), wxSize(800, 600)) {
     // MENU BAR
     wxMenu *menuFile = new wxMenu;
     menuFile->Append(wxID_EXIT);
@@ -77,11 +74,11 @@ MyFrame::MyFrame()
 
     // Create a button
     wxButton *check_button = new wxButton(this, ID_CHECK, "Check solution");
-    wxButton *regenerate_button = new wxButton(this, ID_REGEN, "Regenerate puzzle");
+    // wxButton *regenerate_button = new wxButton(this, ID_REGEN, "Regenerate puzzle");
 
     wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);
     buttonSizer->Add(check_button, 1, wxALL | wxEXPAND, 5);
-    buttonSizer->Add(regenerate_button, 1, wxALL | wxEXPAND, 5);
+    // buttonSizer->Add(regenerate_button, 1, wxALL | wxEXPAND, 5);
 
     // Create the main sizer
     wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -93,52 +90,59 @@ MyFrame::MyFrame()
 
     // BIND EVENTS
     check_button->Bind(wxEVT_BUTTON, &MyFrame::OnButtonClick, this);
-    regenerate_button->Bind(wxEVT_BUTTON, &MyFrame::OnButtonClick, this);
+    // regenerate_button->Bind(wxEVT_BUTTON, &MyFrame::OnButtonClick, this);
 }
  
-void MyFrame::OnExit(wxCommandEvent& event)
-{
+void MyFrame::OnExit(wxCommandEvent& event) {
     Close(true);
 }
  
-void MyFrame::OnAbout(wxCommandEvent& event)
-{
-    wxMessageBox("This is a wxWidgets Hello World example",
-                 "About Hello World", wxOK | wxICON_INFORMATION);
+void MyFrame::OnAbout(wxCommandEvent& event){
+    wxMessageBox("Nonogramm on keeruline m6istatus.", "Nonogrammidest", wxOK | wxICON_INFORMATION);
 }
  
-void MyFrame::OnButtonClick(wxCommandEvent& event)
-{
-    if (event.GetId() == ID_REGEN) {
-        wxMessageBox("regen");
-    }
+void MyFrame::OnButtonClick(wxCommandEvent& event) {
+    // if (event.GetId() == ID_REGEN) {
+    //     wxMessageBox("regen");
+    // }
     if (event.GetId() == ID_CHECK) {
-        wxMessageBox("check");
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (this->nonogram[i][j] == 1) {
+                    if (this->m_gridCells[i+1][j+1]->GetBackgroundColour() == *wxWHITE) {
+                        wxMessageBox("Solution is wrong!");
+                        return;
+                    }
+                }
+                
+                else if (this->nonogram[i][j] == 0) {
+                    if (this->m_gridCells[i+1][j+1]->GetBackgroundColour() == *wxBLACK) {
+                        wxMessageBox("Solution is wrong!");
+                        return;
+                    } 
+                }
+            }
+        }            
+        wxMessageBox("Solution is correct!");
     }
 }
 
-// void MyFrame::OnButtonRightClick(wxCommandEvent& event)
-// {
-//     wxMessageBox("Button R clicked!");
-// }
-
-void MyFrame::OnCellClick(wxMouseEvent& event)
-    {
-        wxStaticText* cell = dynamic_cast<wxStaticText*>(event.GetEventObject());
-        if (cell)
-        {
-            if (event.LeftIsDown())
-            {
-                // Toggle cell color
-                if (cell->GetBackgroundColour() == *wxWHITE)
-                    cell->SetBackgroundColour(*wxBLACK);
-                else
-                    cell->SetBackgroundColour(*wxWHITE);
-                cell->Refresh();
+void MyFrame::OnCellClick(wxMouseEvent& event) {
+    wxStaticText* cell = dynamic_cast<wxStaticText*>(event.GetEventObject());
+    if (cell) {
+        if (event.LeftIsDown()) {
+            // Toggle cell color
+            if (cell->GetBackgroundColour() == *wxWHITE) {
+                cell->SetBackgroundColour(*wxBLACK);
             }
+            else {
+                cell->SetBackgroundColour(*wxWHITE);
+            }
+            cell->Refresh();
         }
-        event.Skip();
     }
+    event.Skip();
+}
 
 void MyFrame::CreateGrid(int rows, int cols) {
     for (int i = 0; i < rows; ++i) {
@@ -151,32 +155,32 @@ void MyFrame::CreateGrid(int rows, int cols) {
             }
             // COLUMN
             else if (i == 0) {
-                wxStaticText* cell = new wxStaticText(this, wxID_ANY, wxString::Format("%c\n%c\n%c", std::to_string(i), std::to_string(j)));
+                wxStaticText* cell = new wxStaticText(this, wxID_ANY, wxString::Format("%c\n%c\n%c", this->hints[4+j][0], this->hints[4+j][1], this->hints[4+j][2]));
+                cell->Wrap(-1);
+                cell->Fit();
+                row.push_back(cell);
+                m_gridSizer->Add(cell, 0, wxEXPAND);
+            }
+            // ROW
+            else if (j == 0) {
+                wxStaticText* cell = new wxStaticText(this, wxID_ANY, wxString::Format("%c %c %c", this->hints[i-1][0], this->hints[i-1][1], this->hints[i-1][2]));
                 cell->Wrap(-1);
                 cell->Fit();
                 row.push_back(cell);
                 m_gridSizer->Add(cell, 0, wxEXPAND);
             }
 
-                else if (j == 0) {
-                    wxStaticText* cell = new wxStaticText(this, wxID_ANY, wxString::Format("%c %c %c", i, j));
-                    cell->Wrap(-1);
-                    cell->Fit();
-                    row.push_back(cell);
-                    m_gridSizer->Add(cell, 0, wxEXPAND);
-                }
-
-                else {
-                    wxStaticText* cell = new wxStaticText(this, wxID_ANY, "", wxDefaultPosition, wxSize(20, 20), wxALIGN_CENTRE);
-                    cell->SetBackgroundColour(*wxWHITE);
-                    cell->Bind(wxEVT_LEFT_DOWN, &MyFrame::OnCellClick, this);
-                    row.push_back(cell);
-                    m_gridSizer->Add(cell, 0, wxEXPAND);
-                }
+            else {
+                wxStaticText* cell = new wxStaticText(this, wxID_ANY, "", wxDefaultPosition, wxSize(20, 20), wxALIGN_CENTRE);
+                cell->SetBackgroundColour(*wxWHITE);
+                cell->Bind(wxEVT_LEFT_DOWN, &MyFrame::OnCellClick, this);
+                row.push_back(cell);
+                m_gridSizer->Add(cell, 0, wxEXPAND);
             }
-            m_gridCells.push_back(row);
         }
+        m_gridCells.push_back(row);
     }
+}
 
 // Generates a random 5x5 nonogram using a vector, 0 being empty, 1 being full
 vector<vector<int>> generateNonogram() {
