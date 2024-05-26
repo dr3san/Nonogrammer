@@ -3,7 +3,7 @@
 #include <vector>
 #include <random>
 #include <iomanip>
-#include <tuple>
+#include <string>
 
 using namespace std;
 
@@ -36,50 +36,78 @@ vector<vector<int>> generateNonogram() {
     return matrix;
 }
 
-// Make a user interface for the nonogram and return the hints data structure
-vector<vector<tuple<int>>> formatNonogramInterface(const vector<vector<int>>& matrix) {
+// Format the nonogram hints and return the hints data structure
+vector<string> formatNonogramInterface(const vector<vector<int>>& matrix) {
     int rows = matrix.size();
     int cols = matrix[0].size();
     
     // First, create row hints
-    vector<vector<int>> rowHints(rows);
+    vector<string> hints(10, "   "); // Initialize with empty strings
     for (int i = 0; i < rows; i++) {
+        string rowHint = "";
         int counter = 0;
         for (int j = 0; j < cols; j++) {
             if (matrix[i][j] == 1) {
                 counter++;
                 if (j == cols - 1 || matrix[i][j + 1] == 0) {
-                    rowHints[i].push_back(counter);
+                    rowHint += to_string(counter);
                     counter = 0;
                 }
             }
         }
+        // Ensure the row hint is exactly 3 characters long
+        while (rowHint.length() < 3) {
+            rowHint = " " + rowHint;
+        }
+        hints[i] = rowHint.substr(0, 3);
     }
 
     // Create column hints
-    vector<vector<int>> colHints(cols);
     for (int j = 0; j < cols; j++) {
+        string colHint = "";
         int counter = 0;
         for (int i = 0; i < rows; i++) {
             if (matrix[i][j] == 1) {
                 counter++;
                 if (i == rows - 1 || matrix[i + 1][j] == 0) {
-                    colHints[j].push_back(counter);
+                    colHint += to_string(counter);
                     counter = 0;
                 }
             }
         }
+        // Ensure the column hint is exactly 3 characters long
+        while (colHint.length() < 3) {
+            colHint = " " + colHint;
+        }
+        hints[5 + j] = colHint.substr(0, 3);
     }
 
+    // Print the hints for debugging purposes
+    cout << "\nFormatted Nonogram Hints:\n";
+    cout << "Row Hints:\n";
+    for (int i = 0; i < 5; i++) {
+        cout << "Row " << i + 1 << ": " << hints[i] << '\n';
+    }
+
+    cout << "Column Hints:\n";
+    for (int i = 5; i < 10; i++) {
+        cout << "Column " << i - 4 << ": " << hints[i] << '\n';
+    }
+
+    return hints;
+}
+
+int main() {
+    vector<vector<int>> matrix = generateNonogram();
+    vector<string> hints = formatNonogramInterface(matrix);
+
+    // Print the nonogram matrix with hints
+    int rows = matrix.size();
+    int cols = matrix[0].size();
+
     // Determine the maximum number of hints for rows and columns to format properly
-    int maxRowHints = 0;
-    int maxColHints = 0;
-    for (const auto& hints : rowHints) {
-        maxRowHints = max(maxRowHints, (int)hints.size());
-    }
-    for (const auto& hints : colHints) {
-        maxColHints = max(maxColHints, (int)hints.size());
-    }
+    int maxRowHints = 3;
+    int maxColHints = 3;
 
     // Print the column hints
     for (int hintRow = 0; hintRow < maxColHints; hintRow++) {
@@ -88,8 +116,8 @@ vector<vector<tuple<int>>> formatNonogramInterface(const vector<vector<int>>& ma
             cout << "   ";
         }
         for (int j = 0; j < cols; j++) {
-            if (hintRow < colHints[j].size()) {
-                cout << setw(3) << colHints[j][hintRow];
+            if (hintRow < hints[5 + j].length()) {
+                cout << setw(3) << hints[5 + j][hintRow];
             } else {
                 cout << "   ";
             }
@@ -100,55 +128,10 @@ vector<vector<tuple<int>>> formatNonogramInterface(const vector<vector<int>>& ma
     // Print the row hints and the nonogram matrix
     for (int i = 0; i < rows; i++) {
         // Print row hints
-        for (int hintIdx = 0; hintIdx < maxRowHints; hintIdx++) {
-            if (hintIdx < rowHints[i].size()) {
-                cout << setw(3) << rowHints[i][hintIdx];
-            } else {
-                cout << "   ";
-            }
-        }
+        cout << setw(3) << hints[i];
         // Print the matrix row
         for (int j = 0; j < cols; j++) {
             cout << setw(3) << (matrix[i][j] == 1 ? "X" : ".");
-        }
-        cout << '\n';
-    }
-
-    // Prepare the return data structure
-    vector<vector<tuple<int>>> hints(10);
-    for (int i = 0; i < rows; i++) {
-        for (int hint : rowHints[i]) {
-            hints[i].emplace_back(hint);
-        }
-    }
-    for (int j = 0; j < cols; j++) {
-        for (int hint : colHints[j]) {
-            hints[5 + j].emplace_back(hint);
-        }
-    }
-
-    return hints;
-}
-
-int main() {
-    vector<vector<int>> matrix = generateNonogram();
-    vector<vector<tuple<int>>> hints = formatNonogramInterface(matrix);
-
-    // Print the returned hints for verification
-    cout << "\nRow Hints:\n";
-    for (int i = 0; i < 5; i++) {
-        cout << "Row " << i + 1 << ": ";
-        for (const auto& hint : hints[i]) {
-            cout << get<0>(hint) << " ";
-        }
-        cout << '\n';
-    }
-
-    cout << "\nColumn Hints:\n";
-    for (int i = 5; i < 10; i++) {
-        cout << "Column " << i - 4 << ": ";
-        for (const auto& hint : hints[i]) {
-            cout << get<0>(hint) << " ";
         }
         cout << '\n';
     }

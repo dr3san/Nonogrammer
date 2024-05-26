@@ -4,9 +4,10 @@
 #include <vector>
 #include <random>
 #include <iomanip>
+#include <string>
 
 using namespace std;
 
 vector<vector<int>> generateNonogram();
-vector<vector<tuple<int>>> formatNonogramInterface(const vector<vector<int>>& matrix);
+vector<string> formatNonogramInterface(const vector<vector<int>>& matrix);
 #endif
