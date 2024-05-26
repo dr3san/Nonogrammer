@@ -8,5 +8,5 @@
 using namespace std;
 
 vector<vector<int>> generateNonogram();
-void formatNonogramInterface(const vector<vector<int>>& matrix);
+vector<vector<tuple<int>>> formatNonogramInterface(const vector<vector<int>>& matrix);
 #endif

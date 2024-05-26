@@ -3,6 +3,7 @@
 #include <vector>
 #include <random>
 #include <iomanip>
+#include <tuple>
 
 using namespace std;
 
@@ -35,8 +36,8 @@ vector<vector<int>> generateNonogram() {
     return matrix;
 }
 
-// Make a user interface for the nonogram
-void formatNonogramInterface(const vector<vector<int>>& matrix) {
+// Make a user interface for the nonogram and return the hints data structure
+vector<vector<tuple<int>>> formatNonogramInterface(const vector<vector<int>>& matrix) {
     int rows = matrix.size();
     int cols = matrix[0].size();
     
@@ -112,10 +113,45 @@ void formatNonogramInterface(const vector<vector<int>>& matrix) {
         }
         cout << '\n';
     }
+
+    // Prepare the return data structure
+    vector<vector<tuple<int>>> hints(10);
+    for (int i = 0; i < rows; i++) {
+        for (int hint : rowHints[i]) {
+            hints[i].emplace_back(hint);
+        }
+    }
+    for (int j = 0; j < cols; j++) {
+        for (int hint : colHints[j]) {
+            hints[5 + j].emplace_back(hint);
+        }
+    }
+
+    return hints;
 }
 
 int main() {
     vector<vector<int>> matrix = generateNonogram();
-    formatNonogramInterface(matrix);
+    vector<vector<tuple<int>>> hints = formatNonogramInterface(matrix);
+
+    // Print the returned hints for verification
+    cout << "\nRow Hints:\n";
+    for (int i = 0; i < 5; i++) {
+        cout << "Row " << i + 1 << ": ";
+        for (const auto& hint : hints[i]) {
+            cout << get<0>(hint) << " ";
+        }
+        cout << '\n';
+    }
+
+    cout << "\nColumn Hints:\n";
+    for (int i = 5; i < 10; i++) {
+        cout << "Column " << i - 4 << ": ";
+        for (const auto& hint : hints[i]) {
+            cout << get<0>(hint) << " ";
+        }
+        cout << '\n';
+    }
+
     return 0;
 }
